@@ -28,6 +28,7 @@
 #include <fstream>
 #include <limits>
 #include <sstream>
+#include <unordered_map>
 #include "thrift/common.h"
 #include "thrift/logging.h"
 #include "thrift/version.h"
@@ -44,7 +45,6 @@ class t_generator {
 public:
   t_generator(t_program* program)
     : keywords_(lang_keywords()){
-    tmp_ = 0;
     indent_ = 0;
     program_ = program;
     program_name_ = get_program_name(program);
@@ -175,8 +175,15 @@ protected:
    * number appended to it (i.e. name35)
    */
   std::string tmp(std::string name) {
+    int counter = 0;
+    auto it = tmp_names_.find(name);
+    if (it != tmp_names_.end()) {
+      counter = it->second;
+    }
+    tmp_names_[name] = counter + 1;
+
     std::ostringstream out;
-    out << name << tmp_++;
+    out << name << counter;
     return out.str();
   }
 
@@ -370,10 +377,7 @@ private:
    */
   int indent_;
 
-  /**
-   * Temporary variable counter, for making unique variable names
-   */
-  int tmp_;
+  std::unordered_map<std::string, int> tmp_names_;
 };
 
 template<typename _CharT, typename _Traits = std::char_traits<_CharT> >
